@@ -6,6 +6,7 @@ export type User = {
   email: string;
   avatar: string;
   role: Role;
+  password?: string;
 };
 
 export type Patient = {
@@ -54,4 +55,28 @@ export type MedicalRecord = {
   diagnosis: string;
   notes: string;
   doctorName: string;
+  prescription?: string;
+};
+
+export type Room = {
+  id: string;
+  roomNumber: string;
+  type: 'General Ward' | 'Private' | 'ICU';
+  status: 'Available' | 'Occupied';
+  patientName?: string;
+};
+
+export type LabTest = {
+    id: string;
+    patientName: string;
+    testName: string;
+    date: string;
+    status: 'Pending' | 'Completed';
+    result?: string;
+};
+
+export type Department = {
+    name: string;
+    description: string;
+    icon: React.ComponentType<{ className?: string }>;
 };

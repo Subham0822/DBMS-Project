@@ -5,8 +5,8 @@ import { AppProvider } from '@/context/app-context';
 import { SidebarProvider } from '@/components/ui/sidebar';
 
 export const metadata: Metadata = {
-  title: 'MediSys',
-  description: 'A modern medical system dashboard.',
+  title: 'MediSys - Hospital Management System',
+  description: 'A modern, responsive Hospital Management System (HMS) web application.',
 };
 
 export default function RootLayout({

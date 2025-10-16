@@ -1,9 +1,11 @@
-import type { User, Patient, Doctor, Appointment, Bill, MedicalRecord } from './types';
+import type { User, Patient, Doctor, Appointment, Bill, MedicalRecord, Room, LabTest } from './types';
+import { Heart, Brain, Bone, Baby, Microscope, Stethoscope } from 'lucide-react';
+
 
 export const users: Record<string, User> = {
-  'user-admin': { id: 'user-admin', name: 'Admin User', email: 'admin@medisys.com', avatar: 'https://picsum.photos/seed/admin/200/200', role: 'admin' },
-  'user-doctor': { id: 'user-doctor', name: 'Dr. Emily Carter', email: 'emily.carter@medisys.com', avatar: 'https://picsum.photos/seed/doctor/200/200', role: 'doctor' },
-  'user-patient': { id: 'user-patient', name: 'John Doe', email: 'john.doe@email.com', avatar: 'https://picsum.photos/seed/patient/200/200', role: 'patient' },
+  'user-admin': { id: 'user-admin', name: 'Admin User', email: 'admin@medisys.com', avatar: 'https://picsum.photos/seed/admin/200/200', role: 'admin', password: 'admin' },
+  'user-doctor': { id: 'user-doctor', name: 'Dr. Emily Carter', email: 'emily.carter@medisys.com', avatar: 'https://picsum.photos/seed/doctor/200/200', role: 'doctor', password: 'doctor' },
+  'user-patient': { id: 'user-patient', name: 'John Doe', email: 'john.doe@email.com', avatar: 'https://picsum.photos/seed/patient/200/200', role: 'patient', password: 'patient' },
 };
 
 export const initialPatients: Patient[] = [
@@ -34,7 +36,54 @@ export const initialBills: Bill[] = [
 ];
 
 export const initialMedicalRecords: MedicalRecord[] = [
-    { id: 'mr001', patientId: 'p001', date: '2024-05-15', diagnosis: 'Minor Arrhythmia', notes: 'Prescribed beta-blockers. Follow-up in 2 months.', doctorName: 'Dr. Emily Carter' },
-    { id: 'mr002', patientId: 'p001', date: '2024-01-05', diagnosis: 'Common Cold', notes: 'Advised rest and hydration.', doctorName: 'Dr. Olivia Chen' },
-    { id: 'mr003', patientId: 'p002', date: '2024-06-01', diagnosis: 'Acne Vulgaris', notes: 'Prescribed topical retinoids.', doctorName: 'Dr. Ben Hanson' },
+    { id: 'mr001', patientId: 'p001', date: '2024-05-15', diagnosis: 'Minor Arrhythmia', notes: 'Prescribed beta-blockers. Follow-up in 2 months.', doctorName: 'Dr. Emily Carter', prescription: 'Metoprolol 50mg' },
+    { id: 'mr002', patientId: 'p001', date: '2024-01-05', diagnosis: 'Common Cold', notes: 'Advised rest and hydration.', doctorName: 'Dr. Olivia Chen', prescription: 'Ibuprofen as needed' },
+    { id: 'mr003', patientId: 'p002', date: '2024-06-01', diagnosis: 'Acne Vulgaris', notes: 'Prescribed topical retinoids.', doctorName: 'Dr. Ben Hanson', prescription: 'Tretinoin Cream 0.05%' },
 ];
+
+export const initialRooms: Room[] = [
+    { id: 'r101', roomNumber: '101', type: 'Private', status: 'Available' },
+    { id: 'r102', roomNumber: '102', type: 'Private', status: 'Occupied', patientName: 'Jane Smith' },
+    { id: 'r201', roomNumber: '201', type: 'General Ward', status: 'Available' },
+    { id: 'r202', roomNumber: '202', type: 'General Ward', status: 'Available' },
+    { id: 'icu01', roomNumber: 'ICU-01', type: 'ICU', status: 'Occupied', patientName: 'Michael Johnson' },
+];
+
+export const initialLabTests: LabTest[] = [
+    { id: 'lt001', patientName: 'John Doe', testName: 'Complete Blood Count (CBC)', date: '2024-07-18', status: 'Pending' },
+    { id: 'lt002', patientName: 'Jane Smith', testName: 'Lipid Panel', date: '2024-07-17', status: 'Completed', result: 'Total Cholesterol: 190 mg/dL' },
+    { id: 'lt003', patientName: 'Michael Johnson', testName: 'Thyroid Panel', date: '2024-07-19', status: 'Pending' },
+];
+
+export const departments = [
+    {
+      name: 'Cardiology',
+      description: 'Expert care for heart-related conditions.',
+      icon: Heart,
+    },
+    {
+      name: 'Neurology',
+      description: 'Specialized treatment for brain and nervous system disorders.',
+      icon: Brain,
+    },
+    {
+      name: 'Orthopedics',
+      description: 'Comprehensive care for bone, joint, and muscle issues.',
+      icon: Bone,
+    },
+    {
+      name: 'Pediatrics',
+      description: 'Dedicated healthcare for infants, children, and adolescents.',
+      icon: Baby,
+    },
+    {
+      name: 'Pathology',
+      description: 'Accurate diagnostic testing and analysis of lab samples.',
+      icon: Microscope,
+    },
+    {
+      name: 'General Medicine',
+      description: 'Primary care and treatment for a wide range of common illnesses.',
+      icon: Stethoscope,
+    }
+  ];

@@ -15,7 +15,7 @@ export function MedicalHistory({ patientId }: { patientId: string }) {
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>Medical History</CardTitle>
-          <CardDescription>Past diagnoses and consultation notes.</CardDescription>
+          <CardDescription>Past diagnoses, prescriptions and consultation notes.</CardDescription>
         </div>
         <Button size="sm" className="gap-1">
           <PlusCircle className="h-4 w-4" />
@@ -29,6 +29,7 @@ export function MedicalHistory({ patientId }: { patientId: string }) {
               <TableHead>Date</TableHead>
               <TableHead>Diagnosis</TableHead>
               <TableHead>Doctor</TableHead>
+              <TableHead>Prescription</TableHead>
               <TableHead>Notes</TableHead>
             </TableRow>
           </TableHeader>
@@ -39,12 +40,13 @@ export function MedicalHistory({ patientId }: { patientId: string }) {
                   <TableCell>{new Date(record.date).toLocaleDateString()}</TableCell>
                   <TableCell className="font-medium">{record.diagnosis}</TableCell>
                   <TableCell>{record.doctorName}</TableCell>
+                  <TableCell>{record.prescription}</TableCell>
                   <TableCell className="text-muted-foreground">{record.notes}</TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center">
+                <TableCell colSpan={5} className="h-24 text-center">
                   No medical records found.
                 </TableCell>
               </TableRow>
