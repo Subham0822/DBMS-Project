@@ -1,12 +1,13 @@
-import type { Metadata } from 'next';
-import './globals.css';
-import { Toaster } from '@/components/ui/toaster';
-import { AppProvider } from '@/context/app-context';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import type { Metadata } from "next";
+import "./globals.css";
+import { Toaster } from "@/components/ui/toaster";
+import { AppProvider } from "@/context/app-context";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
-  title: 'MediSys - Hospital Management System',
-  description: 'A modern, responsive Hospital Management System (HMS) web application.',
+  title: "MediSys - Hospital Management System",
+  description:
+    "A modern, responsive Hospital Management System (HMS) web application.",
 };
 
 export default function RootLayout({
@@ -29,12 +30,12 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        <AppProvider>
-          <SidebarProvider>
+        <ThemeProvider>
+          <AppProvider>
             {children}
             <Toaster />
-          </SidebarProvider>
-        </AppProvider>
+          </AppProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,11 +10,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useAppContext } from '@/context/app-context';
+} from "@/components/ui/dropdown-menu";
+import { useRouter } from "next/navigation";
+import { useAppContext } from "@/context/app-context";
 
 export function UserNav() {
-  const { user } = useAppContext();
+  const { user, logout } = useAppContext();
+  const router = useRouter();
 
   return (
     <DropdownMenu>
@@ -37,15 +39,16 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            Profile
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            Settings
-          </DropdownMenuItem>
+          <DropdownMenuItem>Profile</DropdownMenuItem>
+          <DropdownMenuItem>Settings</DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem
+          onSelect={() => {
+            logout();
+            router.push("/login");
+          }}
+        >
           Log out
         </DropdownMenuItem>
       </DropdownMenuContent>
