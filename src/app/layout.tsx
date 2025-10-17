@@ -1,16 +1,9 @@
-"use client";
-
 import type { Metadata } from "next";
 import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
-import { AppProvider } from "@/context/app-context";
-import { ThemeProvider } from "@/components/theme-provider";
+import { ClientProviders } from "./client-providers";
+import { metadata as appMetadata } from './metadata';
 
-export const metadata: Metadata = {
-  title: "MediSys - Hospital Management System",
-  description:
-    "A modern, responsive Hospital Management System (HMS) web application.",
-};
+export const metadata: Metadata = appMetadata;
 
 export default function RootLayout({
   children,
@@ -32,12 +25,7 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        <ThemeProvider>
-          <AppProvider>
-            {children}
-            <Toaster />
-          </AppProvider>
-        </ThemeProvider>
+        <ClientProviders>{children}</ClientProviders>
       </body>
     </html>
   );
