@@ -114,7 +114,7 @@ export function LandingPage() {
                   />
                   <AvatarFallback>{doctor.name.substring(0, 2)}</AvatarFallback>
                 </Avatar>
-                <div className="absolute bottom-0 w-full pt-20 pb-4 bg-gradient-to-t from-background via-background/80 to-transparent">
+                <div className="absolute bottom-0 w-full pt-20 pb-4">
                   <h3 className="text-lg font-bold">{doctor.name}</h3>
                   <p className="text-primary">{doctor.specialty}</p>
                 </div>
