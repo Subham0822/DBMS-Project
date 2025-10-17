@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -99,7 +100,7 @@ export function LandingPage() {
               </p>
             </div>
           </div>
-          <div className="mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 py-12">
+          <div className="mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 py-12 bg-transparent">
             {initialDoctors.map(doctor => (
               <div
                 key={doctor.id}
