@@ -8,6 +8,13 @@ export default {
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
+    container: {
+      center: true,
+      padding: '2rem',
+      screens: {
+        '2xl': '1400px',
+      },
+    },
     extend: {
       fontFamily: {
         body: ['"PT Sans"', 'sans-serif'],
@@ -84,14 +91,23 @@ export default {
           from: {
             height: 'var(--radix-accordion-content-height)',
           },
-          to: {
+to: {
             height: '0',
           },
         },
+        "aurora": {
+          "from": {
+            "backgroundPosition": "50% 50%, 50% 50%"
+          },
+          "to": {
+            "backgroundPosition": "350% 50%, 350% 50%"
+          }
+        }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        "aurora": "aurora 60s linear infinite"
       },
     },
   },

@@ -19,9 +19,9 @@ export function DashboardStats() {
     switch (role) {
       case "admin":
         return [
-          { title: "Total Patients", value: patients.length, icon: Users },
-          { title: "Total Doctors", value: doctors.length, icon: Stethoscope },
-          { title: "Appointments", value: appointments.length, icon: Calendar },
+          { title: "Total Patients", value: patients.length, icon: Users, color: "text-sky-500" },
+          { title: "Total Doctors", value: doctors.length, icon: Stethoscope, color: "text-emerald-500" },
+          { title: "Appointments", value: appointments.length, icon: Calendar, color: "text-purple-500" },
           {
             title: "Total Revenue",
             value: `$${bills
@@ -29,11 +29,12 @@ export function DashboardStats() {
               .reduce((acc, b) => acc + b.amount, 0)
               .toLocaleString()}`,
             icon: DollarSign,
+            color: "text-amber-500"
           },
         ];
       case "doctor":
         return [
-          { title: "Total Patients", value: "12", icon: Users },
+          { title: "Total Patients", value: "12", icon: Users, color: "text-sky-500" },
           {
             title: "Today's Appointments",
             value: appointments.filter(
@@ -42,9 +43,10 @@ export function DashboardStats() {
                 new Date(a.date).toDateString() === new Date().toDateString()
             ).length,
             icon: Calendar,
+            color: "text-purple-500"
           },
-          { title: "Open Cases", value: "5", icon: Activity },
-          { title: "Completed Consultations", value: "32", icon: FileText },
+          { title: "Open Cases", value: "5", icon: Activity, color: "text-red-500" },
+          { title: "Completed Consultations", value: "32", icon: FileText, color: "text-emerald-500" },
         ];
       case "patient":
         return [
@@ -52,16 +54,19 @@ export function DashboardStats() {
             title: "Upcoming Appointments",
             value: appointments.filter((a) => a.status === "Upcoming").length,
             icon: Calendar,
+            color: "text-purple-500"
           },
           {
             title: "Completed Appointments",
             value: appointments.filter((a) => a.status === "Completed").length,
             icon: Calendar,
+            color: "text-emerald-500"
           },
           {
             title: "Pending Bills",
             value: bills.filter((b) => b.status === "Pending").length,
             icon: FileText,
+            color: "text-red-500"
           },
           {
             title: "Total Spent",
@@ -70,6 +75,7 @@ export function DashboardStats() {
               .reduce((acc, b) => acc + b.amount, 0)
               .toLocaleString()}`,
             icon: DollarSign,
+            color: "text-amber-500"
           },
         ];
       default:
@@ -84,14 +90,15 @@ export function DashboardStats() {
       {stats.map((stat, index) => (
         <Card
           key={index}
-          className="shadow-sm hover:shadow-md transition-shadow"
+          className="group relative overflow-hidden shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
         >
+          <div className={`absolute -top-4 -right-4 h-24 w-24 rounded-full opacity-10 blur-xl transition-all duration-500 group-hover:scale-[10] ${stat.color.replace('text-', 'bg-')}`}></div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-            <stat.icon className="h-4 w-4 text-muted-foreground" />
+            <stat.icon className={`h-4 w-4 text-muted-foreground ${stat.color}`} />
           </CardHeader>
           <CardContent>
-            <AnimatedCount target={stat.value} />
+            <AnimatedCount target={stat.value} className={stat.color}/>
           </CardContent>
         </Card>
       ))}
@@ -99,14 +106,14 @@ export function DashboardStats() {
   );
 }
 
-function AnimatedCount({ target }: { target: number | string }) {
+function AnimatedCount({ target, className }: { target: number | string, className?: string }) {
   if (typeof target === "string") {
-    return <div className="text-2xl font-bold">{target}</div>;
+    return <div className={`text-2xl font-bold ${className}`}>{target}</div>;
   }
   const [value, setValue] = useState(0);
   useEffect(() => {
-    const duration = 800;
-    const steps = 30;
+    const duration = 1000; // Slower for a nicer effect
+    const steps = 50;
     const increment = target / steps;
     let current = 0;
     const interval = setInterval(() => {
@@ -115,10 +122,10 @@ function AnimatedCount({ target }: { target: number | string }) {
         setValue(target);
         clearInterval(interval);
       } else {
-        setValue(Math.round(current));
+        setValue(Math.ceil(current));
       }
-    }, duration / steps);
+    }, (duration / steps) * (1 - Math.pow(1 - (current / target), 4))); // Ease out
     return () => clearInterval(interval);
   }, [target]);
-  return <div className="text-2xl font-bold">{value}</div>;
+  return <div className={`text-2xl font-bold ${className}`}>{value}</div>;
 }
