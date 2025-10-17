@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 
 export function TextType({
   words,
@@ -25,12 +25,12 @@ export function TextType({
     }
     if (deleting && subIndex === 0) {
       setDeleting(false);
-      setIndex((i) => (i + 1) % words.length);
+      setIndex(i => (i + 1) % words.length);
       return;
     }
     const timeout = setTimeout(
       () => {
-        setSubIndex((s) => s + (deleting ? -1 : 1));
+        setSubIndex(s => s + (deleting ? -1 : 1));
       },
       deleting ? speed / 2 : speed
     );
