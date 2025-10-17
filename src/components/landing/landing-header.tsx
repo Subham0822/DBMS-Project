@@ -33,6 +33,12 @@ export function LandingHeader() {
         </Link>
         <nav className="ml-auto hidden lg:flex items-center gap-4 sm:gap-6">
           <Link
+            href="/"
+            className="text-sm font-medium hover:underline underline-offset-4"
+          >
+            Home
+          </Link>
+          <Link
             href="/about"
             className="text-sm font-medium hover:underline underline-offset-4"
           >
@@ -89,6 +95,13 @@ export function LandingHeader() {
       {mobileOpen && (
         <div className="lg:hidden border-b bg-background">
           <nav className="container px-4 py-3 flex flex-col gap-3">
+            <Link
+              href="/"
+              className="text-sm"
+              onClick={() => setMobileOpen(false)}
+            >
+              Home
+            </Link>
             <Link
               href="/about"
               className="text-sm"
