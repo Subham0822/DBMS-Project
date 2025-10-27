@@ -1,3 +1,4 @@
+
 'use client'
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
@@ -13,12 +14,12 @@ const appointmentsByDeptData = [
 ]
 
 const revenueData = [
-    { month: "Jan", revenue: 12345 },
-    { month: "Feb", revenue: 15678 },
-    { month: "Mar", revenue: 18901 },
-    { month: "Apr", revenue: 22345 },
-    { month: "May", revenue: 25678 },
-    { month: "Jun", revenue: 28901 },
+    { month: "Jan", revenue: 123450 },
+    { month: "Feb", revenue: 156780 },
+    { month: "Mar", revenue: 189010 },
+    { month: "Apr", revenue: 223450 },
+    { month: "May", revenue: 256780 },
+    { month: "Jun", revenue: 289010 },
 ]
 
 const chartConfig = {
@@ -27,7 +28,7 @@ const chartConfig = {
     color: "hsl(var(--primary))",
   },
   revenue: {
-    label: "Revenue ($)",
+    label: "Revenue (₹)",
     color: "hsl(var(--accent))",
   }
 }
@@ -74,7 +75,7 @@ export function ReportCharts() {
                 tickMargin={10}
                 axisLine={false}
               />
-              <YAxis tickFormatter={(value) => `$${value / 1000}k`} />
+              <YAxis tickFormatter={(value) => `₹${value / 1000}k`} />
               <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
               <Bar dataKey="revenue" fill="var(--color-revenue)" radius={8} />
             </BarChart>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -63,7 +64,7 @@ export function BillingList() {
             onClick={() => {
               generateBill({
                 patientName: user.name,
-                amount: Math.round(Math.random() * 300 + 50),
+                amount: Math.round(Math.random() * 3000 + 500),
               });
               toast({
                 title: "Bill Generated",
@@ -102,7 +103,7 @@ export function BillingList() {
                   <TableCell>
                     {format(new Date(bill.date), "MM/dd/yyyy")}
                   </TableCell>
-                  <TableCell>${bill.amount.toFixed(2)}</TableCell>
+                  <TableCell>₹{bill.amount.toFixed(2)}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusVariant(bill.status)}>
                       {bill.status}

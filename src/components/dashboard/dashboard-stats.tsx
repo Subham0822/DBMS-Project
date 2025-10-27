@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +8,7 @@ import {
   Stethoscope,
   FileText,
   Calendar,
-  DollarSign,
+  IndianRupee,
   Activity,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -42,11 +43,11 @@ export function DashboardStats() {
           },
           {
             title: 'Total Revenue',
-            value: `$${bills
+            value: `₹${bills
               .filter(b => b.status === 'Paid')
               .reduce((acc, b) => acc + b.amount, 0)
-              .toLocaleString()}`,
-            icon: DollarSign,
+              .toLocaleString('en-IN')}`,
+            icon: IndianRupee,
             color: 'text-amber-500',
             bg: 'bg-amber-500/10',
           },
@@ -111,11 +112,11 @@ export function DashboardStats() {
           },
           {
             title: 'Total Spent',
-            value: `$${bills
+            value: `₹${bills
               .filter(b => b.status === 'Paid')
               .reduce((acc, b) => acc + b.amount, 0)
-              .toLocaleString()}`,
-            icon: DollarSign,
+              .toLocaleString('en-IN')}`,
+            icon: IndianRupee,
             color: 'text-amber-500',
             bg: 'bg-amber-500/10',
           },

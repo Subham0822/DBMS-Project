@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -92,7 +93,7 @@ export function ContactContent() {
                 <div>
                   <h3 className="font-semibold">MediSys Hospital</h3>
                   <p className="text-muted-foreground">
-                    123 Health St, Wellness City, 12345
+                    123 Health St, Wellness City, Mumbai, 400001
                   </p>
                 </div>
               </div>
@@ -100,14 +101,14 @@ export function ContactContent() {
                 <Phone className="h-6 w-6 text-primary mt-1" />
                 <div>
                   <h3 className="font-semibold">General Inquiries</h3>
-                  <p className="text-muted-foreground">(123) 456-7890</p>
+                  <p className="text-muted-foreground">(+91) 22-1234-5678</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
                 <Mail className="h-6 w-6 text-primary mt-1" />
                 <div>
                   <h3 className="font-semibold">Email Support</h3>
-                  <p className="text-muted-foreground">contact@medisys.com</p>
+                  <p className="text-muted-foreground">contact@medisys.in</p>
                 </div>
               </div>
             </div>
