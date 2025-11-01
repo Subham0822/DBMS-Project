@@ -61,6 +61,14 @@ export default function LoginPage() {
             </Select>
           </div>
           <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input 
+              id="email" 
+              type="text" 
+              placeholder="Enter email..."
+            />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <Input 
               id="password" 
