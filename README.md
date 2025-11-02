@@ -377,4 +377,4 @@ For issues or questions about setup:
 
 ---
 
-**Note**: This is a demonstration project for educational purposes. In production, additional security measures, authentication enhancements, and error handling would be required.
+**Note**: This is a demonstration project for educational purposes. In production, additional security measures, authentication enhancements, and error handling would be required. 
