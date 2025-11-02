@@ -115,9 +115,47 @@ The database consists of **20 tables** organized into logical groups:
 19. **User_Login** - Authentication and authorization
 20. **Audit_Log** - Complete audit trail for compliance
 
-### 3.2 Normalization Implementation
+### 3.2 Normalization Steps
 
-The database has been normalized to 3NF to eliminate redundancy and ensure data consistency.
+**UNF → 1NF:**
+
+```sql
+-- Before: Repeating groups
+Patient(Patient_ID, Name, Email, Diseases: "Diabetes, Hypertension")
+
+-- After: Atomic values
+Patient(Patient_ID, Name, Email)
+Patient_Disease(Patient_ID, Disease_ID, Diagnosis_Date)
+```
+
+**1NF → 2NF:**
+
+```sql
+-- Before: Partial dependency
+Prescription_Medicine(Prescription_ID, Medicine_ID, Medicine_Name, Price, Dosage)
+
+-- After: Removed partial dependency
+Medicine(Medicine_ID, Medicine_Name, Price)
+Prescription_Medicine(Prescription_ID, Medicine_ID, Dosage, Quantity)
+```
+
+**2NF → 3NF:**
+
+```sql
+-- Before: Transitive dependency
+Doctor(Doctor_ID, Name, Specialization_Name, Department_Name, Location)
+
+-- After: Removed transitive dependency
+Department(Department_ID, Department_Name, Location)
+Specialization(Specialization_ID, Specialization_Name, Department_ID)
+Doctor(Doctor_ID, Name, Specialization_ID)
+```
+
+**Beyond 3NF:** Database complies with BCNF, 4NF, and 5NF through proper junction tables and key constraints.
+
+### 3.3 Normalization Implementation Details
+
+The database design demonstrates normalization principles through specific implementation choices.
 
 #### Address Normalization
 
@@ -139,7 +177,7 @@ The database has been normalized to 3NF to eliminate redundancy and ensure data 
 - **Patient-Disease**: Junction table `Patient_Disease` with composite primary key (Patient_ID, Disease_ID, Diagnosis_Date)
 - **Prescription-Medicine**: Junction table `Prescription_Medicine` with composite primary key (Prescription_ID, Medicine_ID)
 
-### 3.3 Design Principles Applied
+### 3.4 Design Principles Applied
 
 **Referential Integrity:**
 
@@ -531,33 +569,21 @@ The database has been normalized to 3NF to eliminate redundancy and ensure data 
 
 ### 9.1 Indexing Strategy
 
-**Indexes Created:**
-
-- Primary keys automatically indexed (all 20 tables)
-- Foreign keys indexed for join performance:
-  - idx_doctor_specialization ON Doctor(Specialization_ID)
-  - idx_patient_address ON Patient(Address_ID)
-  - idx_appointment_doctor ON Appointment(Doctor_ID)
-  - idx_appointment_patient ON Appointment(Patient_ID)
-  - idx_medical_record_patient ON Medical_Record(Patient_ID)
-  - idx_billing_patient ON Billing(Patient_ID)
-  - idx_lab_test_patient ON Lab_Test(Patient_ID)
-- Frequently queried columns indexed:
-  - idx_appointment_date ON Appointment(Appointment_Date)
-  - idx_billing_status ON Billing(Payment_Status)
-- Composite indexes for multi-column queries
-- Unique indexes for constraint enforcement
+- Primary keys indexed (all 20 tables)
+- Foreign keys indexed: Doctor(Specialization_ID), Patient(Address_ID), Appointment(Doctor_ID, Patient_ID), Medical_Record(Patient_ID), Billing(Patient_ID), Lab_Test(Patient_ID)
+- Query columns indexed: Appointment(Appointment_Date), Billing(Payment_Status)
+- Composite and unique indexes for multi-column queries and constraints
 
 ### 9.2 Query Optimization Techniques
 
-- Materialized views for expensive aggregations (10 views with indexes)
-- Proper JOIN strategies for multi-table queries
-- WHERE clause optimization using indexed columns
-- Stored procedures for complex operations (reduces network roundtrips)
-- LIMIT usage for large result sets
-- DATE_TRUNC for efficient date-based aggregations
+- Materialized views (10) for expensive aggregations
+- Optimized JOIN strategies and WHERE clauses using indexed columns
+- Stored procedures for complex operations
+- LIMIT and DATE_TRUNC for efficient data retrieval
 
 ---
+
+<!-- <div style="page-break-before: always;"></div> -->
 
 ## 10. System Screenshots
 
@@ -565,7 +591,7 @@ The database has been normalized to 3NF to eliminate redundancy and ensure data 
 
 ![Admin Interface 1](<images/admin(1).png>)
 
-![Admin Interface 3](<images/admin(3).png>)
+<!-- ![Admin Interface 3](<images/admin(3).png>) -->
 
 <div style="page-break-before: always;"></div>
 
@@ -577,7 +603,7 @@ The database has been normalized to 3NF to eliminate redundancy and ensure data 
 
 ![Patient Interface 1](<images/patient(1).png>)
 
-![Patient Interface 2](<images/patient(2).png>)
+<!-- ![Patient Interface 2](<images/patient(2).png>) -->
 
 ---
 
