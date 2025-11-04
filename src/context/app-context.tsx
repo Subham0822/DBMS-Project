@@ -28,6 +28,7 @@ import {
   initialRooms,
   initialLabTests,
 } from "@/lib/data";
+import { doctorAPI, appointmentAPI, patientAPI } from "@/lib/supabase/api";
 
 interface AppContextType {
   role: Role;
@@ -44,6 +45,8 @@ interface AppContextType {
   login: (role: Role, password?: string) => boolean;
   logout: () => void;
   addAppointment: (appointment: Omit<Appointment, "id">) => void;
+  refreshAppointments: () => Promise<void>;
+  refreshDoctors: () => Promise<void>;
   generateBill: (
     bill: Omit<Bill, "id" | "date" | "status"> & Partial<Pick<Bill, "status">>
   ) => void;
@@ -123,6 +126,69 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setAppointments((prev) => [...prev, newAppointment]);
   };
 
+  const refreshAppointments = async () => {
+    try {
+      const { data, error } = await appointmentAPI.getAll();
+      if (!error && data) {
+        // Transform DB format to UI format
+        const transformed = data.map((apt: any) => ({
+          id: `a${apt.Appointment_ID}`,
+          patientId: `p${apt.Patient_ID}`,
+          patientName: apt.Patient_Name || 'Unknown Patient',
+          doctorId: `d${apt.Doctor_ID}`,
+          doctorName: apt.Doctor_Name || 'Unknown Doctor',
+          specialty: apt.Specialization_Name || 'General',
+          date: apt.Appointment_Date,
+          time: formatTime(apt.Appointment_Time),
+          status: mapStatus(apt.Status),
+        }));
+        setAppointments(transformed);
+      }
+    } catch (error) {
+      console.error('Failed to refresh appointments:', error);
+    }
+  };
+
+  const refreshDoctors = async () => {
+    try {
+      const { data, error } = await doctorAPI.getAll();
+      if (!error && data) {
+        // Transform DB format to UI format
+        const transformed = data.map((doc: any) => ({
+          id: `d${doc.Doctor_ID}`,
+          name: doc.Doctor_Name || `${doc.First_Name} ${doc.Last_Name}`,
+          specialty: doc.Specialization_Name || 'General',
+          availability: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'], // Default availability
+          avatar: `https://picsum.photos/seed/doctor${doc.Doctor_ID}/200/200`,
+        }));
+        setDoctors(transformed);
+      }
+    } catch (error) {
+      console.error('Failed to refresh doctors:', error);
+      // Fallback to initial doctors on error
+      setDoctors(initialDoctors);
+    }
+  };
+
+  // Helper functions
+  const formatTime = (time: string): string => {
+    if (!time) return '09:00 AM';
+    // Convert HH:MM:SS to HH:MM AM/PM
+    const [hours, minutes] = time.split(':');
+    const h = parseInt(hours, 10);
+    const m = minutes.slice(0, 2);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12}:${m} ${ampm}`;
+  };
+
+  const mapStatus = (status: string): 'Upcoming' | 'Completed' | 'Cancelled' => {
+    if (status === 'Scheduled') return 'Upcoming';
+    if (status === 'Completed') return 'Completed';
+    if (status === 'Cancelled') return 'Cancelled';
+    return 'Upcoming';
+  };
+
   const generateBill = (
     bill: Omit<Bill, "id" | "date" | "status"> & Partial<Pick<Bill, "status">>
   ) => {
@@ -182,23 +248,35 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setMedicalRecords((prev) => [newRecord, ...prev]);
   };
 
-  // Rehydrate auth state on client load
+  // Rehydrate auth state on client load and fetch data
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(AUTH_KEY);
-      if (!raw) return;
-      const data = JSON.parse(raw) as {
-        role: Role;
-        userId: string;
-        isAuthenticated: boolean;
-      };
-      const storedUser = users[data.userId];
-      if (data.isAuthenticated && storedUser) {
-        setRoleState(data.role);
-        setUser(storedUser);
-        setIsAuthenticated(true);
-      }
-    } catch {}
+    const initializeData = async () => {
+      try {
+        const raw = localStorage.getItem(AUTH_KEY);
+        if (!raw) {
+          // Still fetch doctors even if not logged in
+          await refreshDoctors();
+          return;
+        }
+        const data = JSON.parse(raw) as {
+          role: Role;
+          userId: string;
+          isAuthenticated: boolean;
+        };
+        const storedUser = users[data.userId];
+        if (data.isAuthenticated && storedUser) {
+          setRoleState(data.role);
+          setUser(storedUser);
+          setIsAuthenticated(true);
+        }
+      } catch {}
+      
+      // Fetch doctors and appointments on mount
+      await refreshDoctors();
+      await refreshAppointments();
+    };
+
+    initializeData();
   }, []);
 
   return (
@@ -218,6 +296,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         login,
         logout,
         addAppointment,
+        refreshAppointments,
+        refreshDoctors,
         generateBill,
         payBill,
         requestLabTest,

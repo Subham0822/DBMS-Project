@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import {
   Card,
@@ -19,7 +19,9 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, PlusCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MoreHorizontal, PlusCircle, Search, ArrowUpDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,11 +45,40 @@ export function PatientList() {
   const { patients } = useAppContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [genderFilter, setGenderFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<string>('name');
 
   const handleViewDetails = (patient: Patient) => {
     setSelectedPatient(patient);
     setIsModalOpen(true);
   };
+
+  const filteredAndSortedPatients = useMemo(() => {
+    let filtered = patients.filter(patient => {
+      const matchesSearch = patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           patient.contact.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           patient.address.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesGender = genderFilter === 'all' || patient.gender === genderFilter;
+      return matchesSearch && matchesGender;
+    });
+
+    // Sort
+    filtered = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'dateOfBirth':
+          return new Date(b.dateOfBirth).getTime() - new Date(a.dateOfBirth).getTime();
+        case 'lastVisit':
+          return new Date(b.lastVisit).getTime() - new Date(a.lastVisit).getTime();
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [patients, searchQuery, genderFilter, sortBy]);
 
   return (
     <>
@@ -62,7 +93,51 @@ export function PatientList() {
             Add Patient
           </Button>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {/* Filters and Sort */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search patients..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select value={genderFilter} onValueChange={setGenderFilter}>
+              <SelectTrigger className="w-full sm:w-[150px]">
+                <SelectValue placeholder="Gender" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Genders</SelectItem>
+                <SelectItem value="Male">Male</SelectItem>
+                <SelectItem value="Female">Female</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name">
+                  <div className="flex items-center gap-2">
+                    <ArrowUpDown className="h-4 w-4" />
+                    Name
+                  </div>
+                </SelectItem>
+                <SelectItem value="dateOfBirth">Date of Birth</SelectItem>
+                <SelectItem value="lastVisit">Last Visit</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Results count */}
+          <div className="text-sm text-muted-foreground">
+            Showing {filteredAndSortedPatients.length} of {patients.length} patients
+          </div>
+
           <div className="overflow-x-auto">
             <Table className="w-full">
               <TableHeader>
@@ -83,60 +158,68 @@ export function PatientList() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {patients.map((patient) => (
-                  <TableRow key={patient.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="hidden h-9 w-9 sm:flex">
-                          <AvatarImage
-                            src={patient.avatar}
-                            alt={patient.name}
-                          />
-                          <AvatarFallback>
-                            {patient.name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">{patient.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {format(new Date(patient.dateOfBirth), "MM/dd/yyyy")}
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      {patient.contact}
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      {format(new Date(patient.lastVisit), "MM/dd/yyyy")}
-                    </TableCell>
-                    <TableCell className="text-right w-10">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            aria-haspopup="true"
-                            size="icon"
-                            variant="ghost"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem
-                            onSelect={() => handleViewDetails(patient)}
-                          >
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>Edit</DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive">
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                {filteredAndSortedPatients.length > 0 ? (
+                  filteredAndSortedPatients.map((patient) => (
+                    <TableRow key={patient.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="hidden h-9 w-9 sm:flex">
+                            <AvatarImage
+                              src={patient.avatar}
+                              alt={patient.name}
+                            />
+                            <AvatarFallback>
+                              {patient.name.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium">{patient.name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {format(new Date(patient.dateOfBirth), "MM/dd/yyyy")}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        {patient.contact}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        {format(new Date(patient.lastVisit), "MM/dd/yyyy")}
+                      </TableCell>
+                      <TableCell className="text-right w-10">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              aria-haspopup="true"
+                              size="icon"
+                              variant="ghost"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Toggle menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem
+                              onSelect={() => handleViewDetails(patient)}
+                            >
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>Edit</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-destructive">
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center">
+                      No patients found matching your criteria.
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </div>

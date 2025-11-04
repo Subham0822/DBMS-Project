@@ -77,7 +77,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-             <p className="text-xs text-muted-foreground">Hint: Use 'patient', 'doctor', or 'admin' as the password.</p>
+             {/* <p className="text-xs text-muted-foreground">Hint: Use 'patient', 'doctor', or 'admin' as the password.</p> */}
           </div>
         </CardContent>
         <CardFooter>

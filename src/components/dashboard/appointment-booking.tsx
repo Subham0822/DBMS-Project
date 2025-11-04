@@ -24,9 +24,10 @@ const appointmentFormSchema = z.object({
 });
 
 export function AppointmentBooking() {
-  const { doctors, user, addAppointment } = useAppContext();
+  const { doctors, user, addAppointment, refreshAppointments } = useAppContext();
   const { toast } = useToast();
   const [selectedSpecialty, setSelectedSpecialty] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof appointmentFormSchema>>({
     resolver: zodResolver(appointmentFormSchema),
@@ -35,28 +36,77 @@ export function AppointmentBooking() {
   const availableSpecialties = [...new Set(doctors.map(d => d.specialty))];
   const availableDoctors = doctors.filter(d => d.specialty === selectedSpecialty);
 
-  function onSubmit(data: z.infer<typeof appointmentFormSchema>) {
+  async function onSubmit(data: z.infer<typeof appointmentFormSchema>) {
     const doctor = doctors.find(d => d.id === data.doctorId);
     if (!doctor) return;
 
-    addAppointment({
-      patientId: user.id,
-      patientName: user.name,
-      doctorId: doctor.id,
-      doctorName: doctor.name,
-      specialty: doctor.specialty,
-      date: format(data.date, 'yyyy-MM-dd'),
-      time: data.time,
-      status: 'Upcoming',
-    });
-    
-    toast({
-      title: 'Appointment Booked!',
-      description: `Your appointment with ${doctor.name} on ${format(data.date, 'PPP')} at ${data.time} is confirmed.`,
-      className: 'bg-accent text-accent-foreground',
-    });
-    form.reset();
-    setSelectedSpecialty(null);
+    setIsSubmitting(true);
+    const appointmentDate = format(data.date, 'yyyy-MM-dd');
+    const to24Hour = (t: string) => {
+      // Convert 'HH:MM AM/PM' -> 'HH:MM:00' 24h
+      const match = t.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+      if (!match) return '09:00:00';
+      let [_, hh, mm, ap] = match;
+      let h = parseInt(hh, 10);
+      const isPM = ap.toUpperCase() === 'PM';
+      if (isPM && h !== 12) h += 12;
+      if (!isPM && h === 12) h = 0;
+      const hh24 = String(h).padStart(2, '0');
+      return `${hh24}:${mm}:00`;
+    };
+
+    // Extract numeric ID from string IDs (e.g., 'd001' -> 1)
+    const parseNumericId = (id: string) => {
+      const digits = id.replace(/\D/g, '');
+      return digits ? parseInt(digits, 10) : 1;
+    };
+
+    try {
+      // Get or create patient ID - use dummy patient ID 1 if user is demo
+      let patientId = parseNumericId(user.id);
+      
+      // If user ID doesn't parse to a valid number, use patient ID 1 (first patient in seed)
+      if (!patientId || patientId < 1) {
+        patientId = 1; // Default to first patient in database
+      }
+
+      const payload = {
+        Doctor_ID: parseNumericId(doctor.id),
+        Patient_ID: patientId,
+        Appointment_Date: appointmentDate,
+        Appointment_Time: to24Hour(data.time),
+      };
+
+      const res = await fetch('/api/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const resJson = await res.json();
+      if (!res.ok) {
+        throw new Error(resJson?.error || 'Failed to book appointment');
+      }
+
+      // Refresh appointments from database
+      await refreshAppointments();
+
+      toast({
+        title: 'Appointment Booked!',
+        description: `Your appointment with ${doctor.name} on ${format(data.date, 'PPP')} at ${data.time} is confirmed.`,
+        className: 'bg-accent text-accent-foreground',
+      });
+      form.reset();
+      setSelectedSpecialty(null);
+    } catch (e: any) {
+      toast({
+        title: 'Booking failed',
+        description: e?.message || 'Please try again later.',
+        className: 'bg-destructive text-destructive-foreground',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -149,9 +199,9 @@ export function AppointmentBooking() {
                   )}
                 />
             </div>
-            <Button type="submit">
+            <Button type="submit" disabled={isSubmitting}>
                 <Check className="mr-2 h-4 w-4" />
-                Confirm Appointment
+                {isSubmitting ? 'Booking...' : 'Confirm Appointment'}
             </Button>
           </form>
         </Form>

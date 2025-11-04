@@ -38,6 +38,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: result.error.message }, { status: 400 });
     }
 
+    // The RPC returns an array with { success, message, appointment_id }
+    if (result.data && Array.isArray(result.data) && result.data.length > 0) {
+      const response = result.data[0];
+      if (!response.success) {
+        return NextResponse.json({ error: response.message || 'Failed to book appointment' }, { status: 400 });
+      }
+      return NextResponse.json({ 
+        success: true, 
+        message: response.message,
+        appointment_id: response.appointment_id 
+      }, { status: 201 });
+    }
+
     return NextResponse.json(result.data, { status: 201 });
   } catch (error) {
     return NextResponse.json(

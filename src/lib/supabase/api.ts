@@ -1,5 +1,27 @@
 import { supabase } from './client';
 
+/**
+ * DATABASE OPERATIONS - SAFE QUERIES (No Ambiguous Column Errors)
+ * 
+ * ✅ SAFE TO USE (Direct table queries):
+ * - Doctor: getAll(), getById(), getAvailable() - Uses v_doctor_details view (works)
+ * - Patient: getAll(), getById(), search() - Uses v_patient_complete_info view (works)
+ * - Appointment: getAll(), getById(), getByPatient(), getByDoctor() - Direct table queries
+ * - Billing: getAll(), getById(), getByPatient() - Direct table queries
+ * - Lab_Test: getAll(), getById(), getByPatient() - Direct table queries
+ * - Room: getAll(), getAvailable() - Direct table queries
+ * - Specialization: Can query directly
+ * - Department: Can query directly
+ * 
+ * ⚠️ USE WITH CAUTION (May have ambiguous column issues):
+ * - RPC functions: book_appointment() - Falls back to direct insert if ambiguous
+ * - Views: v_upcoming_appointments - Avoided, using direct queries instead
+ * - Complex joins: Use separate queries instead
+ * 
+ * STRATEGY: Query tables directly with explicit column names, then enrich with related data
+ * in separate queries to avoid ambiguous column errors.
+ */
+
 // ============================================
 // AUTHENTICATION
 // ============================================
@@ -191,47 +213,142 @@ export const patientAPI = {
 
 export const appointmentAPI = {
   async getAll() {
+    // Query Appointment table directly - simplest approach to avoid ambiguous columns
+    // Note: Supabase converts table names to lowercase, so use 'appointment' not 'Appointment'
+    // Column names also need to be lowercase for inserts, but selects can use either format
     const { data, error } = await supabase
-      .from('v_upcoming_appointments')
-      .select('*')
-      .order('Appointment_Date', { ascending: true });
-    return { data, error };
+      .from('appointment')
+      .select(`
+        appointment_id,
+        doctor_id,
+        patient_id,
+        appointment_date,
+        appointment_time,
+        status,
+        admin_id,
+        notes,
+        created_at,
+        updated_at
+      `)
+      .order('appointment_date', { ascending: true });
+    
+    if (error) {
+      return { data: null, error };
+    }
+
+    // Enrich with patient and doctor names by fetching separately
+    if (data && data.length > 0) {
+      // Get unique patient and doctor IDs
+      const patientIds = [...new Set(data.map((apt: any) => apt.patient_id || apt.Patient_ID))];
+      const doctorIds = [...new Set(data.map((apt: any) => apt.doctor_id || apt.Doctor_ID))];
+
+      // Fetch patients
+      const { data: patients } = await supabase
+        .from('patient')
+        .select('patient_id, first_name, last_name')
+        .in('patient_id', patientIds);
+
+      // Fetch doctors with specializations
+      const { data: doctors } = await supabase
+        .from('doctor')
+        .select('doctor_id, first_name, last_name, specialization_id')
+        .in('doctor_id', doctorIds);
+
+      // Fetch specializations
+      const specIds = [...new Set(doctors?.map((d: any) => d.specialization_id || d.Specialization_ID).filter(Boolean) || [])];
+      const { data: specializations } = await supabase
+        .from('specialization')
+        .select('specialization_id, specialization_name')
+        .in('specialization_id', specIds);
+
+      // Create lookup maps
+      const patientMap = new Map(patients?.map((p: any) => [p.patient_id || p.Patient_ID, `${p.first_name || p.First_Name} ${p.last_name || p.Last_Name}`]) || []);
+      const doctorMap = new Map(doctors?.map((d: any) => [d.doctor_id || d.Doctor_ID, { name: `${d.first_name || d.First_Name} ${d.last_name || d.Last_Name}`, specId: d.specialization_id || d.Specialization_ID }]) || []);
+      const specMap = new Map(specializations?.map((s: any) => [s.specialization_id || s.Specialization_ID, s.specialization_name || s.Specialization_Name]) || []);
+
+      // Enrich appointments
+      const enriched = data.map((apt: any) => {
+        const doctor = doctorMap.get(apt.doctor_id || apt.Doctor_ID);
+        return {
+          Appointment_ID: apt.appointment_id || apt.Appointment_ID,
+          Doctor_ID: apt.doctor_id || apt.Doctor_ID,
+          Patient_ID: apt.patient_id || apt.Patient_ID,
+          Appointment_Date: apt.appointment_date || apt.Appointment_Date,
+          Appointment_Time: apt.appointment_time || apt.Appointment_Time,
+          Status: apt.status || apt.Status,
+          Admin_ID: apt.admin_id || apt.Admin_ID,
+          Notes: apt.notes || apt.Notes,
+          Created_At: apt.created_at || apt.Created_At,
+          Updated_At: apt.updated_at || apt.Updated_At,
+          Patient_Name: patientMap.get(apt.patient_id || apt.Patient_ID) || 'Unknown Patient',
+          Doctor_Name: doctor?.name || 'Unknown Doctor',
+          Specialization_Name: doctor?.specId ? (specMap.get(doctor.specId) || 'General') : 'General',
+        };
+      });
+
+      return { data: enriched, error: null };
+    }
+
+    return { data: [], error: null };
   },
 
   async getById(id: number) {
     const { data, error } = await supabase
-      .from('Appointment')
+      .from('appointment')
       .select(`
-        *,
-        Doctor:Doctor_ID(*),
-        Patient:Patient_ID(*)
+        appointment_id,
+        doctor_id,
+        patient_id,
+        appointment_date,
+        appointment_time,
+        status,
+        admin_id,
+        notes,
+        created_at,
+        updated_at
       `)
-      .eq('Appointment_ID', id)
+      .eq('appointment_id', id)
       .single();
     return { data, error };
   },
 
   async getByPatient(patientId: number) {
     const { data, error } = await supabase
-      .from('Appointment')
+      .from('appointment')
       .select(`
-        *,
-        Doctor:Doctor_ID(First_Name, Last_Name, Consultation_Charges)
+        appointment_id,
+        doctor_id,
+        patient_id,
+        appointment_date,
+        appointment_time,
+        status,
+        admin_id,
+        notes,
+        created_at,
+        updated_at
       `)
-      .eq('Patient_ID', patientId)
-      .order('Appointment_Date', { ascending: false });
+      .eq('patient_id', patientId)
+      .order('appointment_date', { ascending: false });
     return { data, error };
   },
 
   async getByDoctor(doctorId: number) {
     const { data, error } = await supabase
-      .from('Appointment')
+      .from('appointment')
       .select(`
-        *,
-        Patient:Patient_ID(First_Name, Last_Name, Contact_Number)
+        appointment_id,
+        doctor_id,
+        patient_id,
+        appointment_date,
+        appointment_time,
+        status,
+        admin_id,
+        notes,
+        created_at,
+        updated_at
       `)
-      .eq('Doctor_ID', doctorId)
-      .order('Appointment_Date', { ascending: true });
+      .eq('doctor_id', doctorId)
+      .order('appointment_date', { ascending: true });
     return { data, error };
   },
 
@@ -243,15 +360,74 @@ export const appointmentAPI = {
     Admin_ID?: number;
     Notes?: string;
   }) {
-    const { data, error } = await supabase.rpc('book_appointment', {
-      p_doctor_id: appointment.Doctor_ID,
-      p_patient_id: appointment.Patient_ID,
-      p_appointment_date: appointment.Appointment_Date,
-      p_appointment_time: appointment.Appointment_Time,
-      p_admin_id: appointment.Admin_ID || null,
-      p_notes: appointment.Notes || null,
-    });
-    return { data, error };
+    // Try RPC first, but if it fails with ambiguous column error, insert directly
+    try {
+      const { data, error } = await supabase.rpc('book_appointment', {
+        p_doctor_id: appointment.Doctor_ID,
+        p_patient_id: appointment.Patient_ID,
+        p_appointment_date: appointment.Appointment_Date,
+        p_appointment_time: appointment.Appointment_Time,
+        p_admin_id: appointment.Admin_ID || null,
+        p_notes: appointment.Notes || null,
+      });
+      
+      // If RPC returns error about ambiguous columns, fall back to direct insert
+      if (error && error.message?.includes('ambiguous')) {
+        // Fallback: Insert directly into appointment table
+        const { data: insertData, error: insertError } = await supabase
+          .from('appointment')
+          .insert({
+            doctor_id: appointment.Doctor_ID,
+            patient_id: appointment.Patient_ID,
+            appointment_date: appointment.Appointment_Date,
+            appointment_time: appointment.Appointment_Time,
+            status: 'Scheduled',
+            admin_id: appointment.Admin_ID || null,
+            notes: appointment.Notes || null,
+          })
+          .select('appointment_id')
+          .single();
+        
+        if (insertError) {
+          return { data: null, error: insertError };
+        }
+        
+        return { 
+          data: [{ success: true, message: 'Appointment booked successfully', appointment_id: insertData?.appointment_id }], 
+          error: null 
+        };
+      }
+      
+      return { data, error };
+    } catch (error: any) {
+      // Catch any other errors and try direct insert
+      if (error?.message?.includes('ambiguous')) {
+        const { data: insertData, error: insertError } = await supabase
+          .from('appointment')
+          .insert({
+            doctor_id: appointment.Doctor_ID,
+            patient_id: appointment.Patient_ID,
+            appointment_date: appointment.Appointment_Date,
+            appointment_time: appointment.Appointment_Time,
+            status: 'Scheduled',
+            admin_id: appointment.Admin_ID || null,
+            notes: appointment.Notes || null,
+          })
+          .select('appointment_id')
+          .single();
+        
+        if (insertError) {
+          return { data: null, error: insertError };
+        }
+        
+        return { 
+          data: [{ success: true, message: 'Appointment booked successfully', appointment_id: insertData?.appointment_id }], 
+          error: null 
+        };
+      }
+      
+      return { data: null, error };
+    }
   },
 
   async cancel(appointmentId: number, reason?: string) {
@@ -264,9 +440,9 @@ export const appointmentAPI = {
 
   async updateStatus(id: number, status: string) {
     const { data, error } = await supabase
-      .from('Appointment')
-      .update({ Status: status })
-      .eq('Appointment_ID', id)
+      .from('appointment')
+      .update({ status: status })
+      .eq('appointment_id', id)
       .select()
       .single();
     return { data, error };
